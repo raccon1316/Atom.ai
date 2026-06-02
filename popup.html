@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atom.AI</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ════ SCREEN: ONBOARDING ════ -->
+<div class="screen" id="screen-onboarding">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:560px;padding:28px 24px;text-align:center;">
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,var(--p),var(--t));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px;box-shadow:0 8px 24px rgba(124,113,255,0.35);">⚛</div>
+    <div style="font-size:22px;font-weight:800;letter-spacing:1px;background:linear-gradient(135deg,var(--p),var(--t));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;">Welcome to Atom.AI</div>
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:28px;line-height:1.6;">Research any company in 30 seconds.<br>AI browser agent + sales intelligence.</div>
+    <div style="display:flex;gap:6px;margin-bottom:24px;">
+      <div id="ob-step1-dot" style="width:20px;height:4px;border-radius:2px;background:var(--p);"></div>
+      <div id="ob-step2-dot" style="width:20px;height:4px;border-radius:2px;background:var(--b2);"></div>
+    </div>
+    <!-- Step 1 -->
+    <div id="ob-step1" style="width:100%;">
+      <div style="font-size:13px;font-weight:700;color:var(--tx);margin-bottom:6px;">Choose your AI provider</div>
+      <div style="font-size:11px;color:var(--tx2);margin-bottom:16px;">Both are free. Pick whichever you prefer.</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+        <div id="ob-choose-nvidia" id="ob-choose-nvidia" style="background:var(--s2);border:2px solid var(--p);border-radius:10px;padding:14px;cursor:pointer;text-align:left;">
+          <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:3px;">⚡ NVIDIA NIM <span style="font-size:9px;background:var(--pg);color:var(--p);padding:1px 6px;border-radius:8px;margin-left:4px;">RECOMMENDED</span></div>
+          <div style="font-size:11px;color:var(--tx2);">Best quality · Llama 70B · Free tier</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:3px;">Key starts with: nvapi-</div>
+        </div>
+        <div id="ob-choose-groq" id="ob-choose-groq" style="background:var(--s2);border:2px solid var(--b2);border-radius:10px;padding:14px;cursor:pointer;text-align:left;">
+          <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:3px;">🚀 Groq</div>
+          <div style="font-size:11px;color:var(--tx2);">Ultra fast · Llama 3.3 · Generous free tier</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:3px;">Key starts with: gsk_</div>
+        </div>
+      </div>
+      <button class="btn btn-p" id="ob-next-btn" style="width:100%;padding:12px;font-size:13px;">Continue →</button>
+    </div>
+    <!-- Step 2 -->
+    <div id="ob-step2" style="width:100%;display:none;">
+      <div id="ob-provider-label" style="font-size:13px;font-weight:700;color:var(--tx);margin-bottom:6px;">Paste your NVIDIA API key</div>
+      <div style="font-size:11px;color:var(--tx2);margin-bottom:4px;">Don't have one? Get it free:</div>
+      <a id="ob-get-key-link" href="https://build.nvidia.com/explore/discover" target="_blank" style="font-size:11px;color:var(--p);display:block;margin-bottom:14px;">→ Get free NVIDIA key</a>
+      <input type="password" id="ob-api-key" placeholder="Paste your API key here..." style="font-size:12px;padding:11px 13px;margin-bottom:8px;border-color:var(--p);">
+      <div id="ob-key-error" style="font-size:11px;color:var(--red);display:none;margin-bottom:8px;"></div>
+      <button class="btn btn-p" id="ob-verify-btn" style="width:100%;padding:12px;font-size:13px;">✦ Verify & Start</button>
+      <div id="ob-verifying" style="display:none;font-size:11px;color:var(--p);margin-top:8px;">⚡ Verifying key...</div>
+      <button class="btn btn-g" id="ob-back-btn" style="width:100%;padding:10px;font-size:12px;margin-top:8px;">← Back to providers</button>
+      <button id="ob-skip-btn" style="background:none;border:none;color:var(--tx3);font-size:11px;margin-top:10px;cursor:pointer;font-family:inherit;">Skip for now</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: HOME
+     ════════════════════════════════════ -->
+<div class="screen active" id="screen-home">
+  <div class="topbar">
+    <div class="logo-row">
+      <div class="logo-mark">⚛</div>
+      <div>
+        <div class="logo-name">ATOM.AI</div>
+        <div class="logo-sub">Business Intelligence</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="status-pill">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">connecting</span><span id="callCounter"></span>
+      </div>
+      <div class="status-pill" id="providerBadge">Provider: NVIDIA</div>
+      <button class="more-btn" id="moreBtn" title="More features">More ▼</button>
+    </div>
+  </div>
+  <div id="moreMenu" style="display:none;padding:0 12px 10px;">
+    <div class="chips">
+      <button class="btn btn-g bsm" id="moreChatBtn">Chat</button>
+      <button class="btn btn-g bsm" id="moreNotesBtn">Notes</button>
+      <button class="btn btn-g bsm" id="moreMonitorBtn">Monitor</button>
+    </div>
+  </div>
+
+  <div class="home-body">
+    <!-- Welcome banner -->
+    <div class="onboard" id="onboardBanner" style="background:linear-gradient(135deg,rgba(124,113,255,0.08),rgba(0,224,180,0.04));border:1px solid rgba(124,113,255,0.22);border-radius:12px;padding:12px 14px;position:relative;">
+      <button class="ob-close" id="onboardClose" style="position:absolute;top:9px;right:10px;background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px;">✕</button>
+      <div style="font-size:12px;font-weight:700;margin-bottom:3px;">👋 Welcome to Atom.AI</div>
+      <div style="font-size:11px;color:var(--tx2);line-height:1.6;">Research any company in 30 seconds or automate any browser task with AI.</div>
+    </div>
+
+    <!-- 2 Main mode cards -->
+    <div class="mode-cards">
+      <div class="mode-card research" id="goResearch">
+        <div class="mode-card-top">
+          <div class="mode-icon ri">🔍</div>
+          <div>
+            <div class="mode-title">Research</div>
+            <div class="mode-desc">Company briefs, deep research, market intel, page analysis</div>
+          </div>
+        </div>
+        <div class="mode-chips">
+          <span class="mode-chip">Sales Brief</span>
+          <span class="mode-chip">Fact Check</span>
+          <span class="mode-chip">Market Size</span>
+          <span class="mode-chip">Compare</span>
+        </div>
+        <span class="mode-arrow">→</span>
+      </div>
+
+      <div class="mode-card automate" id="goAutomate">
+        <div class="mode-card-top">
+          <div class="mode-icon au">⚡</div>
+          <div>
+            <div class="mode-title">Automate</div>
+            <div class="mode-desc">AI browser agent, extract data, fill forms, play videos</div>
+          </div>
+        </div>
+        <div class="mode-chips">
+          <span class="mode-chip">Auto Task</span>
+          <span class="mode-chip">Find Emails</span>
+          <span class="mode-chip">Extract Leads</span>
+          <span class="mode-chip">Tech Stack</span>
+        </div>
+        <span class="mode-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Quick page actions -->
+    <div class="quick-row">
+      <div class="quick-label">⚡ Quick Actions — this page</div>
+      <div class="quick-chips">
+        <span class="qchip auto-chip" data-action="emails">📧 Emails</span>
+        <span class="qchip auto-chip" data-action="phones">📞 Phones</span>
+        <span class="qchip auto-chip" data-action="prices">💰 Prices</span>
+        <span class="qchip auto-chip" data-action="techstack">🛠 Tech Stack</span>
+        <span class="qchip auto-chip" data-action="extractleads">📋 Leads</span>
+        <span class="qchip auto-chip" data-action="readmode">📖 Read</span>
+      </div>
+      <div class="outbox" id="autoResult"></div>
+    </div>
+
+    <!-- Mini feature cards -->
+    <div class="more-row">
+      <div class="mini-card" id="goHistory">
+        <div class="mini-card-icon">🕘</div>
+        <div class="mini-card-label">History</div>
+      </div>
+      <div class="mini-card" id="goSettings">
+        <div class="mini-card-icon">⚙️</div>
+        <div class="mini-card-label">Settings</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: RESEARCH
+     ════════════════════════════════════ -->
+<div class="screen" id="screen-research">
+  <div class="topbar">
+    <div class="logo-row">
+      <button class="back-btn" id="backFromResearch">← Home</button>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:var(--tx);">🔍 Research</div>
+    <div class="status-pill">
+      <span class="dot" id="statusDot2"></span>
+    </div>
+  </div>
+
+  <div class="panel-body">
+    <!-- Company hero -->
+    <div class="r-hero">
+      <div class="r-hero-label">Company Intelligence</div>
+      <input id="companyName" placeholder="Company name or website URL...">
+      <div class="r-hero-btns">
+        <button class="btn btn-p" id="companyResearch" style="flex:2;padding:10px;font-size:13px;">⚡ Sales Brief</button>
+      </div>
+      <div class="chips" style="margin-top:10px;margin-bottom:0;">
+        <span class="chip company-type-chip active" data-type="sales">🎯 Sales</span>
+        <span class="chip company-type-chip" data-type="full">🗂 Full</span>
+        <span class="chip company-type-chip" data-type="competitor">⚔️ Competitor</span>
+        <span class="chip company-type-chip" data-type="investor">💰 Investor</span>
+      </div>
+    </div>
+
+    <div id="researchProgress">
+      <div class="prog-ttl">
+        <div class="spinner"></div>
+        Researching<span id="progressDots">...</span>
+      </div>
+      <div id="progressSteps" style="display:flex;flex-direction:column;gap:4px;margin-top:6px;"></div>
+      <div class="pbar-wrap"><div class="pbar-fill" id="progressBarFill"></div></div>
+    </div>
+    <div class="outbox" id="companyResult"></div>
+
+    <div class="div"></div>
+    <div class="slab">⚔️ Competitor <em>Battle Card</em></div>
+    <input id="battleUrl1" placeholder="Competitor URL 1">
+    <input id="battleUrl2" placeholder="Competitor URL 2" style="margin-top:6px;">
+    <input id="battleUrl3" placeholder="Competitor URL 3" style="margin-top:6px;">
+    <button class="btn btn-r bfull" id="generateBattleCard" style="margin-top:8px;">Generate Comparison Table</button>
+    <div class="outbox" id="battleOutput"></div>
+
+    <div class="div"></div>
+
+    <!-- Page analysis -->
+    <div class="slab">🔍 Page <em>Analysis</em></div>
+    <div class="chips">
+      <span class="chip intel-chip" data-action="factcheck">✅ Fact Check</span>
+      <span class="chip intel-chip" data-action="bias">⚖️ Bias</span>
+      <span class="chip intel-chip" data-action="scam">🚨 Scam</span>
+      <span class="chip intel-chip" data-action="darkpattern">🕵 Dark Patterns</span>
+      <span class="chip intel-chip" data-action="privacy">🔒 Privacy</span>
+      <span class="chip intel-chip" data-action="sentiment">💬 Sentiment</span>
+    </div>
+
+    <div class="div"></div>
+
+    <!-- Deep research -->
+    <div class="slab">🌐 Deep <em>Research</em></div>
+    <input id="intelTopic" placeholder="Topic, company, person, market...">
+    <div class="brow" style="margin-top:8px;">
+      <button class="btn btn-p" id="intelResearch">🔬 Deep Research</button>
+      <button class="btn btn-b" id="intelMultiTab">🗂 Multi-Source</button>
+      <button class="btn btn-g" id="intelCompare">⚖️ Compare</button>
+    </div>
+
+    <div class="div"></div>
+
+    <!-- Market -->
+    <div class="slab">📊 Market <em>Intelligence</em></div>
+    <input id="marketTopic" placeholder="Industry or market...">
+    <div class="brow" style="margin-top:8px;">
+      <button class="btn btn-t" id="marketSize">📊 Market Size</button>
+      <button class="btn btn-y" id="marketTrends">📈 Trends</button>
+      <button class="btn btn-g" id="marketPlayers">🏆 Players</button>
+    </div>
+
+    <div class="div"></div>
+
+    <!-- Person -->
+    <div class="slab">👤 Person <em>Research</em></div>
+    <input id="personName" placeholder="Name, role, or LinkedIn URL...">
+    <button class="btn btn-b bfull" id="personResearch">👤 Research Person</button>
+
+    <div class="outbox" id="intelResult"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: AUTOMATE
+     ════════════════════════════════════ -->
+<div class="screen" id="screen-automate">
+  <div class="topbar">
+    <div class="logo-row">
+      <button class="back-btn" id="backFromAutomate">← Home</button>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:var(--tx);">⚡ Automate</div>
+    <div class="status-pill">
+      <span class="dot" id="statusDot3"></span>
+    </div>
+  </div>
+
+  <div class="panel-body">
+    <!-- Agent -->
+    <div class="slab">🤖 Browser <em>Agent</em></div>
+    <!-- Multi-tab research hero -->
+    <div style="background:linear-gradient(135deg,rgba(124,113,255,0.08),rgba(0,224,180,0.04));border:1px solid rgba(124,113,255,0.25);border-radius:10px;padding:12px;margin-bottom:10px;">
+      <div style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--p);text-transform:uppercase;margin-bottom:6px;">⚡ Multi-Tab Intelligence</div>
+      <div style="font-size:11px;color:var(--tx2);margin-bottom:8px;line-height:1.5;">Open any company websites, LinkedIn profiles, or competitor pages — then click below to research all of them at once.</div>
+      <button class="btn btn-p" id="readAllTabsBtn" style="width:100%;padding:10px;font-size:13px;">🔍 Research All Open Tabs</button>
+    </div>
+
+    <div class="slab">⚡ Quick <em>Tasks</em></div>
+    <div class="chips" style="margin-bottom:8px;">
+      <span class="chip task-template" data-task="read all my open tabs and compare what each company does, their pricing, and who they target">📊 Compare Tabs</span>
+      <span class="chip task-template" data-task="read all my open tabs and give me a sales intelligence report on each company">🎯 Sales Intel</span>
+      <span class="chip task-template" data-task="go to youtube and play a trending song">▶ Play Song</span>
+      <span class="chip task-template" data-task="go to producthunt.com and tell me todays top 5 products">🚀 ProductHunt</span>
+      <span class="chip task-template" data-task="go to news.ycombinator.com and summarize top 5 stories">📰 HN News</span>
+      <span class="chip task-template" data-task="go to github.com/trending and tell me top 5 trending repos">⭐ GitHub</span>
+    </div>
+    <textarea id="prompt" placeholder="Describe any task — or open websites and click Research All Open Tabs..."></textarea>
+    <div class="brow">
+      <button class="btn btn-p" id="ask">✦ Ask AI</button>
+      <button class="btn btn-t" id="autotask">⚡ Run Task</button>
+      <button class="btn btn-r" id="agentStop" style="display:none;">⏹ Stop</button>
+      <button class="btn btn-g" id="summarize">Summarize</button>
+    </div>
+    <div id="loader">⚡ Working...</div>
+    <div id="result">Result will appear here...</div>
+    <div class="rnav">
+      <button class="narr" id="resultPrev">←</button>
+      <button class="narr" id="resultNext">→</button>
+      <span class="rcnt" id="resultCounter"></span>
+      <div style="flex:1"></div>
+      <button class="btn btn-g bsm" id="copy">Copy</button>
+      <button class="btn btn-g bsm" id="copyMarkdownTable">📋 Copy as Markdown Table</button>
+      <button class="btn btn-g bsm" id="toSheetsResult">📊 To Sheets</button>
+      <button class="btn btn-g bsm" id="save">Save</button>
+      <button class="btn btn-g bsm" id="exportResult">Export</button>
+      <button class="btn btn-g bsm" id="clearNotes">🗑</button>
+    </div>
+
+    <div class="div"></div>
+
+    <!-- Extract data -->
+    <div class="outbox" id="autoResultAutomate"></div>
+    <div class="slab">📥 Extract <em>Data</em></div>
+    <div class="chips">
+      <span class="chip auto-chip" data-action="extractleads">📋 Leads</span>
+      <span class="chip auto-chip" data-action="extractcsv">📊 CSV</span>
+      <span class="chip auto-chip" data-action="emails">📧 Emails</span>
+      <span class="chip auto-chip" data-action="phones">📞 Phones</span>
+      <span class="chip auto-chip" data-action="prices">💰 Prices</span>
+      <span class="chip auto-chip" data-action="techstack">🛠 Tech</span>
+      <span class="chip auto-chip" data-action="links">🔗 Links</span>
+      <span class="chip auto-chip" data-action="readmode">📖 Read</span>
+    </div>
+    <button class="btn btn-b bfull" id="extracttable">📥 Extract All Data</button>
+
+    <div class="div"></div>
+
+    <!-- Autofill -->
+    <div class="slab">⚡ Smart <em>Autofill</em></div>
+    <input id="autofillInstructions" placeholder="e.g. Fill name: John, email: john@gmail.com">
+    <button class="btn btn-p bfull" id="autoFillBtn">⚡ Fill Form</button>
+    <div class="outbox" id="workflowResult"></div>
+
+    <div class="div"></div>
+
+    <!-- Workflow recorder -->
+    <div class="slab">📋 Workflow <em>Recorder</em></div>
+    <div class="brow">
+      <button class="btn btn-r" id="workflowRecord">⏺ Record</button>
+      <button class="btn btn-g" id="workflowStop" disabled>⏹ Stop</button>
+      <button class="btn btn-t" id="workflowReplay" disabled>▶ Replay</button>
+      <button class="btn btn-g bsm" id="workflowClear">🗑</button>
+    </div>
+    <div id="workflowStatus">No workflow recorded.</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: CHAT
+     ════════════════════════════════════ -->
+<div class="screen" id="screen-chat">
+  <div class="topbar">
+    <button class="back-btn" id="backFromChat">← Home</button>
+    <div style="font-size:13px;font-weight:700;">💬 Chat with Page</div>
+    <div style="width:60px;"></div>
+  </div>
+  <div class="panel-body" style="display:flex;flex-direction:column;">
+    <div class="chatbox" id="chatBox" style="flex:1;height:auto;min-height:300px;">
+      <div class="cmsg ai">👋 I have read this page. Ask me anything about the content.</div>
+    </div>
+    <div class="chatrow" style="margin-top:auto;">
+      <textarea id="chatInput" placeholder="Ask about this page..."></textarea>
+      <button class="btn btn-p" id="chatSend" style="height:40px;align-self:flex-end;padding:0 14px;">Send</button>
+    </div>
+    <button class="btn btn-g bfull" id="chatClear" style="margin-top:6px;">🗑 Clear Chat</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: HISTORY
+     ════════════════════════════════════ -->
+<div class="screen" id="screen-history">
+  <div class="topbar">
+    <button class="back-btn" id="backFromHistory">← Home</button>
+    <div style="font-size:13px;font-weight:700;">🕘 History</div>
+    <button class="btn btn-g bsm" id="historyClearAll">🗑 Clear</button>
+  </div>
+  <div class="panel-body">
+    <input id="historySearch" placeholder="Search reports..." style="margin-bottom:8px;">
+    <div class="hfilters" id="historyFilters">
+      <span class="hfilter active" data-filter="all">All</span>
+      <span class="hfilter" data-filter="deep">🔬 Deep</span>
+      <span class="hfilter" data-filter="company">🏢 Company</span>
+      <span class="hfilter" data-filter="person">👤 Person</span>
+      <span class="hfilter" data-filter="market">📊 Market</span>
+      <span class="hfilter" data-filter="page">🔍 Page</span>
+    </div>
+    <div id="historyList" style="display:flex;flex-direction:column;gap:7px;max-height:400px;overflow-y:auto;margin-top:8px;">
+      <div class="empty-state" id="historyEmpty">No history yet.<br><small>Every report is saved automatically.</small></div>
+    </div>
+    <div id="historyViewer" style="display:none;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <button class="btn btn-g bsm" id="historyBack">← Back</button>
+        <span id="historyViewerTitle" style="font-size:12px;font-weight:700;color:var(--tx);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      </div>
+      <div id="historyViewerBody" style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:12px;max-height:340px;overflow-y:auto;font-size:12px;line-height:1.7;white-space:pre-wrap;color:var(--tx);"></div>
+      <div style="display:flex;gap:5px;margin-top:7px;flex-wrap:wrap;">
+        <button class="btn btn-g bsm" id="historyViewCopy">📋 Copy</button>
+        <button class="btn btn-t bsm" id="historyViewPDF">📄 PDF</button>
+        <button class="btn btn-g bsm" id="historyViewTxt">📝 TXT</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: NOTES
+     ════════════════════════════════════ -->
+<div class="screen" id="screen-notes">
+  <div class="topbar">
+    <button class="back-btn" id="backFromNotes">← Home</button>
+    <div style="font-size:13px;font-weight:700;">📌 Notes</div>
+    <div style="display:flex;gap:5px;">
+      <button class="btn btn-g bsm" id="notesExport">Export</button>
+      <button class="btn btn-g bsm" id="notesClearAll">🗑</button>
+    </div>
+  </div>
+  <div class="panel-body">
+    <input id="notesSearch" placeholder="Search notes..." style="margin-bottom:10px;">
+    <div id="notesList" style="display:flex;flex-direction:column;gap:7px;max-height:440px;overflow-y:auto;">
+      <div class="empty-state" id="notesEmpty">No saved notes yet.<br><small>Use Save on any result to save here.</small></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: MONITOR
+     ════════════════════════════════════ -->
+<div class="screen" id="screen-monitor">
+  <div class="topbar">
+    <button class="back-btn" id="backFromMonitor">← Home</button>
+    <div style="font-size:13px;font-weight:700;">👁 Monitor</div>
+    <button class="btn btn-p bsm" id="refreshBrief">🔄 Refresh</button>
+  </div>
+  <div class="panel-body">
+    <div class="brief-card">
+      <div class="brief-date" id="briefDate">📅 Daily Intel Brief</div>
+      <div class="brief-content" id="briefContent">Add competitors below to get your daily brief.</div>
+    </div>
+    <div class="slab" style="margin-top:4px;">👁 Competitor <em>Watchlist</em></div>
+    <div class="card-list" id="monitorList">
+      <div class="empty-state" id="monitorEmpty">No competitors tracked.<br><small>Add one below</small></div>
+    </div>
+    <div class="div"></div>
+    <label class="flabel">Competitor Name</label>
+    <input id="monitorName" placeholder="e.g. Notion, Stripe">
+    <label class="flabel">Website URL</label>
+    <input id="monitorUrl" placeholder="https://their-website.com">
+    <button class="btn btn-t bfull" id="monitorAdd">+ Add Competitor</button>
+    <button class="btn btn-g bfull" id="monitorCheckAll" style="margin-top:5px;">🔄 Check All Now</button>
+    <div class="outbox" id="monitorResult"></div>
+  </div>
+</div>
+
+<!-- ════════ SCREEN: SETTINGS ════════ -->
+<div class="screen" id="screen-settings">
+  <div class="topbar">
+    <button class="back-btn" id="backFromSettings">← Home</button>
+    <div style="font-size:13px;font-weight:700;color:var(--tx);">⚙️ Settings</div>
+    <div style="width:60px;"></div>
+  </div>
+  <div class="panel-body">
+
+    <!-- Pro Status -->
+    <div style="background:linear-gradient(135deg,rgba(124,113,255,0.08),rgba(0,224,180,0.04));border:1px solid rgba(124,113,255,0.25);border-radius:10px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--p);text-transform:uppercase;margin-bottom:6px;">Account</div>
+      <div id="proStatus" style="font-size:12px;color:var(--tx2);">Free Plan</div>
+      <button class="btn btn-p" id="upgradeBtn" style="width:100%;margin-top:10px;padding:10px;">✦ Upgrade (Early Access)</button>
+    </div>
+    <div class="pricing-plans">
+      <div class="plan-card"><div class="plan-title">Light $5/mo</div><div class="plan-body">100 calls, 3 tabs</div><div class="plan-badge">Coming Soon</div></div>
+      <div class="plan-card"><div class="plan-title">Pro $10/mo</div><div class="plan-body">Unlimited, 10 tabs, scheduled research</div><div class="plan-badge">Coming Soon</div></div>
+      <div class="plan-card"><div class="plan-title">Team $20/mo</div><div class="plan-body">Pro features + 3 seats, shared workflows</div><div class="plan-badge">Coming Soon</div></div>
+    </div>
+
+    <!-- Usage -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">Daily Usage</div>
+      <div style="background:var(--s2);border-radius:6px;height:6px;overflow:hidden;margin-bottom:4px;">
+        <div id="usageBar" style="height:100%;background:linear-gradient(90deg,var(--p),var(--t));width:0%;transition:width 0.4s;border-radius:6px;"></div>
+      </div>
+      <div id="usageText" style="font-size:10px;color:var(--tx3);font-family:monospace;">0 / 20 free calls today</div>
+    </div>
+
+    <!-- API Key -->
+    <div class="slab">🔑 API <em>Key</em></div>
+    <div id="settingsProviderHint" style="font-size:11px;color:var(--tx2);margin-bottom:6px;">Your AI provider key. Use Settings to switch between NVIDIA and Groq.</div>
+    <input type="password" id="settingsApiKey" placeholder="nvapi-..." style="font-family:monospace;font-size:11px;">
+    <button class="btn btn-g bfull" id="changeApiSetupBtn" style="margin-top:8px;">Change Provider / API Key</button>
+
+    <!-- Model -->
+    <div class="slab" style="margin-top:12px;">🤖 AI <em>Model</em></div>
+    <select id="settingsModel">
+      <option value="llama3-8b-8192">Groq Llama 3 8B — Fast</option>
+      <option value="meta/llama-3.1-8b-instruct">Llama 3.1 8B — Fast (Free)</option>
+      <option value="meta/llama-3.3-70b-instruct">Llama 3.3 70B — Powerful (Pro)</option>
+    </select>
+
+    <!-- Webhook -->
+    <div class="slab" style="margin-top:12px;">🔗 CRM <em>Webhook</em></div>
+    <div style="font-size:11px;color:var(--tx2);margin-bottom:6px;">Paste a Zapier/Make webhook URL to auto-sync research results to your CRM.</div>
+    <input type="url" id="settingsWebhook" placeholder="https://hooks.zapier.com/...">
+
+    <button class="btn btn-p" id="saveSettingsBtn" style="width:100%;padding:10px;margin-top:14px;font-size:13px;">💾 Save Settings</button>
+    <div class="brow" style="margin-top:8px;">
+      <button class="btn btn-g bfull" id="exportAllDataBtn">Export All Data</button>
+      <button class="btn btn-g bfull" id="importAllDataBtn">Import Data</button>
+      <input type="file" id="importAllDataFile" accept="application/json" style="display:none;">
+    </div>
+    <div class="div"></div>
+    <div class="slab">Debug <em>Log</em></div>
+    <div class="brow">
+      <button class="btn btn-g bsm" id="refreshDebugLogBtn">Refresh Log</button>
+      <button class="btn btn-g bsm" id="copyDebugLogBtn">Copy Debug Log</button>
+      <button class="btn btn-g bsm" id="clearDebugLogBtn">Clear Log</button>
+    </div>
+    <pre id="debugLogBox" style="max-height:160px;overflow:auto;margin-top:8px;"></pre>
+
+  </div>
+</div>
+
+<!-- Pro Modal -->
+<div id="proModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--s1);border:1px solid var(--pgb);border-radius:16px;padding:24px;max-width:340px;width:100%;text-align:center;">
+    <div style="font-size:28px;margin-bottom:8px;">⚛</div>
+    <div style="font-size:18px;font-weight:800;background:linear-gradient(135deg,var(--p),var(--t));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;">Atom.AI Pro</div>
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:16px;line-height:1.6;">Unlimited AI calls · 70B model · All features · CRM sync · Priority support</div>
+    <div style="font-size:24px;font-weight:800;color:var(--tx);margin-bottom:4px;">$9<span style="font-size:14px;color:var(--tx2)">/month</span></div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:16px;">or $89/year (save 17%)</div>
+    <a href="https://atomai.pro/upgrade" target="_blank" class="btn btn-p" style="display:block;width:100%;padding:12px;font-size:14px;text-decoration:none;border-radius:8px;margin-bottom:8px;">✦ Upgrade Now</a>
+    <button id="proModalClose" class="btn btn-g" style="width:100%;padding:10px;">Maybe later</button>
+  </div>
+</div>
+
+<script type="module" src="popup.js"></script>
+</body>
+</html>

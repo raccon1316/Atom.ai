@@ -9,49 +9,35 @@ export class Settings {
   }
 
   async load() {
-    const [data, sessionRes] = await Promise.all([
-      chrome.storage.local.get(["userSettings"]),
-      chrome.runtime.sendMessage({ type: "GET_API_KEY" }).catch(() => ({ apiKey: "" }))
-    ]);
+    const data = await chrome.storage.local.get(["userSettings"]);
     if (data.userSettings) Object.assign(this.userSettings, data.userSettings);
-    this.userSettings.apiKey = sessionRes?.apiKey || "";
 
-    const keyInput   = document.getElementById("settingsApiKey");
-    const modelSel   = document.getElementById("settingsModel");
-    const webhookIn  = document.getElementById("settingsWebhook");
-    const proStatus  = document.getElementById("proStatus");
-    const usageBar   = document.getElementById("usageBar");
-    const usageText  = document.getElementById("usageText");
+    const webhookIn = document.getElementById("settingsWebhook");
+    const proStatus = document.getElementById("proStatus");
+    const usageBar  = document.getElementById("usageBar");
+    const usageText = document.getElementById("usageText");
 
-    if (keyInput)  keyInput.value  = this.userSettings.apiKey || "";
-    if (modelSel)  modelSel.value  = this.userSettings.model  || "meta/llama-3.1-8b-instruct";
     if (webhookIn) webhookIn.value = this.userSettings.webhookUrl || "";
 
-    const limit = this.userSettings.isPro ? 999 : 20;
+    const limit = this.userSettings.isPro ? 999 : 50;
     const used  = this.userSettings.dailyCallsUsed || 0;
     const pct   = Math.min(100, (used / limit) * 100);
 
     if (usageBar)  usageBar.style.width = pct + "%";
-    if (usageText) usageText.innerText  = this.userSettings.isPro
+    if (usageText) usageText.innerText = this.userSettings.isPro
       ? "Pro — unlimited calls"
       : `${used} / ${limit} free calls today`;
 
     if (proStatus) proStatus.innerHTML = this.userSettings.isPro
       ? '<span class="pro-badge">✦ PRO</span>'
       : 'Free Plan';
+
     await this.refreshDebugLog();
   }
 
   async save() {
-    const key     = document.getElementById("settingsApiKey")?.value.trim();
-    const model   = document.getElementById("settingsModel")?.value;
     const webhook = document.getElementById("settingsWebhook")?.value.trim();
-
-    this.userSettings.apiKey = key ?? "";
-    this.userSettings.model = model || "meta/llama-3.1-8b-instruct";
     this.userSettings.webhookUrl = webhook ?? "";
-
-    await chrome.runtime.sendMessage({ type: "SET_API_KEY", apiKey: this.userSettings.apiKey });
     await chrome.runtime.sendMessage({ type: "SAVE_USER_SETTINGS", settings: this.userSettings });
 
     const btn = document.getElementById("saveSettingsBtn");
@@ -63,21 +49,35 @@ export class Settings {
   }
 
   showProModal() {
-    window.open("https://forms.gle/6Z9xQfV5WfSxw7AA6", "_blank");
+    const modal = document.getElementById("proModal");
+    if (modal) modal.style.display = "flex";
+    chrome.storage.local.get(["proNotifyEmail"]).then((data) => {
+      const emailInput = document.getElementById("proEmailInput");
+      if (emailInput && data?.proNotifyEmail) emailInput.value = data.proNotifyEmail;
+    }).catch(() => {});
   }
 
   initEventListeners() {
     document.getElementById("saveSettingsBtn")?.addEventListener("click", () => this.save());
     document.getElementById("upgradeBtn")?.addEventListener("click", () => this.showProModal());
+    document.getElementById("resetExtensionBtn")?.addEventListener("click", () => this.resetExtension());
     document.getElementById("refreshDebugLogBtn")?.addEventListener("click", () => this.refreshDebugLog());
     document.getElementById("clearDebugLogBtn")?.addEventListener("click", () => this.clearDebugLog());
     document.getElementById("proModalClose")?.addEventListener("click", () => {
       const m = document.getElementById("proModal");
       if (m) m.style.display = "none";
     });
+    document.getElementById("proNotifyBtn")?.addEventListener("click", () => this.handleProNotify());
 
     // Wire settings screen navigation
     document.getElementById("goSettings")?.addEventListener("click", () => this.load());
+  }
+
+  async resetExtension() {
+    if (!confirm("This will erase all settings, notes, history, and data. Continue?")) return;
+    await chrome.storage.local.clear();
+    await chrome.storage.session.clear().catch(() => {});
+    window.location.reload();
   }
 
   async refreshDebugLog() {
@@ -103,5 +103,27 @@ export class Settings {
     const box = document.getElementById("debugLogBox");
     if (box) box.innerText = "Debug log cleared.";
     await Utils.writeDebugLog("Debug log cleared", "info");
+  }
+
+  async handleProNotify() {
+    const emailInput = document.getElementById("proEmailInput");
+    const email = emailInput?.value.trim();
+    if (!email || !email.includes("@")) {
+      window.showToast?.("Please enter a valid email address.", "error");
+      return;
+    }
+    await chrome.storage.local.set({ proNotifyEmail: email });
+    const btn = document.getElementById("proNotifyBtn");
+    if (btn) {
+      btn.innerText = "Notified!";
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.innerText = "Notify Me";
+        btn.disabled = false;
+      }, 2000);
+    }
+    const modal = document.getElementById("proModal");
+    if (modal) modal.style.display = "none";
+    window.showToast?.("Thanks! We’ll notify you when Pro launches.", "info");
   }
 }

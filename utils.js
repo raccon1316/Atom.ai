@@ -333,8 +333,29 @@ export const Utils = {
       .join('\n');
   },
 
+  async getBackendBaseCandidates() {
+    const defaults = [
+      'https://atom-ai-eight.vercel.app',
+      'https://atom-ai.vercel.app',
+      'https://atomai.pro'
+    ];
+    const bases = [];
+    try {
+      const data = await chrome.storage.local.get(['backendBaseUrl']).catch(() => ({}));
+      const stored = String(data?.backendBaseUrl || '').trim();
+      if (stored) {
+        try {
+          bases.push(new URL(stored).origin.replace(/\/$/, ''));
+        } catch {
+          bases.push(stored.replace(/\/$/, '').replace(/\/api\/.*$/i, ''));
+        }
+      }
+    } catch {}
+    defaults.forEach((base) => bases.push(base));
+    return [...new Set(bases.filter(Boolean))];
+  },
+
   async callBattleCardApi(pages, installId, options = {}) {
-    const endpoint = options.endpoint || 'https://atom-ai-eight.vercel.app/api/battle-card';
     const payload = {
       pages: Array.isArray(pages)
         ? pages.map((page) => ({
@@ -350,36 +371,64 @@ export const Utils = {
       return { ok: false, error: 'No cleaned page text available.' };
     }
 
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const raw = await res.text();
-    let data = {};
-    try {
-      data = raw ? JSON.parse(raw) : {};
-    } catch {
-      data = { raw };
+    const endpoints = [];
+    if (options.endpoint) {
+      endpoints.push(String(options.endpoint).trim());
+    }
+    for (const base of await this.getBackendBaseCandidates()) {
+      endpoints.push(`${base}/api/battle-card`);
     }
 
-    if (!res.ok) {
-      return {
-        ok: false,
-        error: data?.error || data?.message || 'Battle card failed (' + res.status + ')',
-        raw: data?.raw || raw
-      };
+    let lastError = null;
+    for (const endpoint of [...new Set(endpoints.filter(Boolean))]) {
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const raw = await res.text();
+        let data = {};
+        try {
+          data = raw ? JSON.parse(raw) : {};
+        } catch {
+          data = { raw };
+        }
+
+        if (!res.ok) {
+          const errorText = data?.error || data?.message || 'Battle card failed (' + res.status + ')';
+          const retryable = [404, 408, 500, 502, 503, 504].includes(Number(res.status));
+          if (retryable) {
+            lastError = new Error(errorText);
+            continue;
+          }
+          return {
+            ok: false,
+            error: errorText,
+            raw: data?.raw || raw
+          };
+        }
+
+        const table = String(data?.table || data?.markdown || data?.result || raw || '').trim();
+        const clean = this.cleanMarkdownTable(table);
+        if (!clean) {
+          lastError = new Error('Battle card returned an empty table.');
+          continue;
+        }
+        return { ok: true, table: clean, raw: data };
+      } catch (error) {
+        lastError = error;
+      }
     }
 
-    const table = String(data?.table || data?.markdown || data?.result || raw || '').trim();
-    const clean = this.cleanMarkdownTable(table);
-    if (!clean) {
-      return { ok: false, error: 'Battle card returned an empty table.', raw };
-    }
-    return { ok: true, table: clean, raw: data };
+    return {
+      ok: false,
+      error: lastError?.message || 'Battle card failed.',
+      raw: null
+    };
   },
   wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
